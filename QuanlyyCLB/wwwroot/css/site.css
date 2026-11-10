@@ -1,0 +1,359 @@
+:root {
+    --primary: #1E4DB7;
+    --primary-dark: #16399A;
+    --accent: #F59E0B;
+    --bg: #F5F7FA;
+    --text: #1F2937;
+    --muted: #6B7280;
+    --border: #E5E7EB;
+}
+
+body {
+    font-family: 'Be Vietnam Pro', 'Segoe UI', Arial, sans-serif;
+    font-size: 16px;
+    color: var(--text);
+    background: var(--bg);
+}
+
+.page-title {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0;
+}
+
+h2 {
+    font-size: 22px;
+    font-weight: 600;
+}
+
+h3 {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+table {
+    font-size: 14px;
+}
+
+.small, .form-text {
+    font-size: 13px;
+}
+
+/* Bootstrap override */
+.btn {
+    height: 40px;
+    padding: 0 16px;
+    font-size: 15px;
+    font-weight: 500;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.btn-sm {
+    height: 32px;
+    padding: 0 12px;
+    font-size: 14px;
+}
+
+.btn-primary {
+    background: var(--primary);
+    border-color: var(--primary);
+}
+
+    .btn-primary:hover {
+        background: var(--primary-dark);
+        border-color: var(--primary-dark);
+    }
+
+.btn-outline-primary {
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+    .btn-outline-primary:hover {
+        background: var(--primary);
+        border-color: var(--primary);
+    }
+
+.btn-link {
+    color: var(--primary);
+}
+
+.nav-pills .nav-link {
+    color: var(--primary);
+    border-radius: 8px;
+}
+
+    .nav-pills .nav-link.active {
+        background: var(--primary);
+    }
+
+.form-control, .form-select {
+    min-height: 40px;
+    border-color: var(--border);
+    border-radius: 8px;
+}
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 .2rem rgba(30,77,183,.15);
+    }
+
+textarea.form-control {
+    height: auto;
+}
+
+.badge {
+    font-weight: 500;
+    font-size: 12px;
+    padding: 5px 8px;
+    border-radius: 6px;
+}
+
+.badge-dark {
+    background: #374151;
+    color: #fff;
+}
+
+/* Khung */
+.topbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    z-index: 1030;
+}
+
+.brand {
+    color: var(--primary);
+    font-weight: 700;
+    font-size: 20px;
+    text-decoration: none;
+}
+
+.sidebar {
+    position: fixed;
+    top: 64px;
+    bottom: 0;
+    left: 0;
+    width: 240px;
+    background: var(--primary);
+    padding-top: 16px;
+    z-index: 1020;
+}
+
+    .sidebar a {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 24px;
+        color: #fff;
+        text-decoration: none;
+        font-size: 15px;
+        border-left: 4px solid transparent;
+    }
+
+        .sidebar a i {
+            font-size: 18px;
+        }
+
+        .sidebar a:hover {
+            background: rgba(255,255,255,.1);
+        }
+
+        .sidebar a.active {
+            background: var(--primary-dark);
+            border-left-color: var(--accent);
+        }
+
+.content {
+    margin-left: 240px;
+    padding: 88px 32px 32px;
+}
+
+/* Thành phần */
+.card-box {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+}
+
+    .card-box.p-0 {
+        padding: 0;
+    }
+
+.stat {
+    display: block;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 14px;
+}
+
+a.stat:hover {
+    border-color: var(--primary);
+}
+
+.stat .num {
+    display: block;
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.table thead th {
+    background: #EEF2FB;
+    color: var(--primary);
+    font-weight: 600;
+    border-bottom: 0;
+}
+
+.table-striped-custom tbody tr:nth-child(odd) {
+    background: #fff;
+}
+
+.table-striped-custom tbody tr:nth-child(even) {
+    background: #FAFBFD;
+}
+
+.avatar {
+    display: inline-flex;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+    align-items: center;
+    justify-content: center;
+}
+
+    .avatar.sm {
+        width: 28px;
+        height: 28px;
+        font-size: 13px;
+        margin-right: 6px;
+    }
+
+.cover {
+    height: 140px;
+    background: linear-gradient(135deg, #1E4DB7, #5B8DEF);
+    color: rgba(255,255,255,.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+}
+
+    .cover.big {
+        height: 200px;
+    }
+
+.asset-img {
+    width: 100%;
+    aspect-ratio: 1/1;
+    max-height: 160px;
+    background: #EEF2FB;
+    border-radius: 8px;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 56px;
+}
+
+/* Điểm danh */
+.code-big {
+    font-size: 64px;
+    font-weight: 700;
+    letter-spacing: 8px;
+    border: 3px solid var(--primary);
+    border-radius: 12px;
+    display: inline-block;
+    padding: 8px 32px;
+    margin: 16px 0;
+    color: var(--primary);
+}
+
+.code-input {
+    font-size: 32px;
+    text-align: center;
+    letter-spacing: 8px;
+    height: 64px;
+}
+
+/* Đăng nhập */
+.login-bg {
+    background: #EEF2FB;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.login-card {
+    background: #fff;
+    width: 420px;
+    max-width: 92vw;
+    padding: 32px;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,.08);
+}
+
+.login-logo {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto;
+    border-radius: 50%;
+    background: var(--primary);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+}
+
+/* Điện thoại */
+@media (max-width: 767px) {
+    .sidebar {
+        transform: translateX(-100%);
+        transition: .2s;
+    }
+
+        .sidebar.open {
+            transform: none;
+        }
+
+    .content {
+        margin-left: 0;
+        padding: 88px 16px 24px;
+    }
+
+    .page-title {
+        font-size: 24px;
+    }
+
+    .btn {
+        height: 44px;
+    }
+
+    .code-big {
+        font-size: 40px;
+        letter-spacing: 4px;
+    }
+}

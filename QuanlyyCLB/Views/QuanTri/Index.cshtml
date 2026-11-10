@@ -1,0 +1,17 @@
+@using System.Data
+@model DataTable
+@{ ViewData["Title"] = "Quản lý tài khoản"; }
+<div class="card-box mb-3">
+    <h3 class="h6">Tạo tài khoản</h3>
+    <form method="post" asp-action="TaoTaiKhoan" class="row g-2">
+        <input name="tenDangNhap" class="form-control col" placeholder="Tên đăng nhập" required />
+        <input name="matKhau" type="password" class="form-control col" placeholder="Mật khẩu" required />
+        <select name="loaiTaiKhoan" class="form-select col"><option>SinhVien</option><option>GiangVien</option><option>QuanTri</option></select>
+        <input name="maSV" class="form-control col" placeholder="Mã SV (nếu có)" />
+        <input name="maGV" class="form-control col" placeholder="Mã GV (nếu có)" />
+        <button class="btn btn-primary col-auto">Tạo</button>
+    </form>
+</div>
+<div class="card-box"><table class="table"><thead><tr><th>Tên đăng nhập</th><th>Loại</th><th>Mã SV/GV</th><th>Trạng thái</th><th></th></tr></thead><tbody>
+@foreach (DataRow r in Model.Rows) { <tr><td>@r["TenDangNhap"]</td><td>@r["LoaiTaiKhoan"]</td><td>@(r["MaSV"] is DBNull ? r["MaGV"] : r["MaSV"])</td><td>@r["TrangThai"]</td><td><form method="post" asp-action="Khoa"><input type="hidden" name="id" value="@r["MaTK"]" /><input type="hidden" name="khoa" value="@(Convert.ToString(r["TrangThai"]) == "HoatDong")" /><button class="btn btn-sm btn-outline-danger">@(Convert.ToString(r["TrangThai"]) == "HoatDong" ? "Khóa" : "Mở khóa")</button></form></td></tr> }
+</tbody></table></div>

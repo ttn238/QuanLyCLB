@@ -1,0 +1,111 @@
+@model List<TaiSan>
+@{
+    ViewData["Title"] = "Tài sản";
+    bool quanLy = !User.IsInRole("ThanhVien");
+    bool quanLyTS = User.IsInRole("ChuNhiem") || User.IsInRole("PhuTrach");
+    var phieus = (List<PhieuMuon>)ViewBag.Phieus;
+}
+@if (quanLyTS) { <div class="card-box mb-3"><form method="post" asp-action="Them" class="row g-2"><input name="ten" class="form-control col" placeholder="Tên tài sản" required /><input name="loai" class="form-control col" placeholder="Loại tài sản" required /><select name="tinhTrang" class="form-select col"><option value="Tot">Tốt</option><option value="Cu">Cũ</option><option value="HuNhe">Hỏng nhẹ</option></select><button class="btn btn-primary col-auto">Thêm tài sản</button></form></div> }
+<div class="row g-3 mb-4">
+    @foreach (var t in Model)
+    {
+        <div class="col-6 col-lg-3">
+            <div class="card-box text-center h-100">
+                <div class="asset-img"><i class="bi @t.Icon"></i></div>
+                <div class="fw-semibold mt-2">@t.Ten</div>
+                <div class="small text-muted">@t.Ma · Còn @t.ConLai/@t.TongSo</div>
+                <span class="badge @Ui.Badge(t.TinhTrang) my-2">@t.TinhTrang</span><br />
+                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#mMuon" data-id="@t.Id" data-ten="@t.Ten" data-max="@t.ConLai"
+                        disabled="@(t.ConLai == 0 || t.TinhTrang == "Hỏng")">Mượn</button>
+            </div>
+        </div>
+    }
+</div>
+
+@{ var treHan = (System.Data.DataTable)ViewBag.TreHan; }
+@if (quanLy && treHan.Rows.Count > 0)
+{
+    <div class="alert alert-danger">
+        <div class="fw-semibold mb-1"><i class="bi bi-exclamation-triangle"></i> Phiếu mượn trễ hạn</div>
+        @foreach (System.Data.DataRow r in treHan.Rows)
+        {
+            <div>Phiếu #@r["MaPhieu"] · @r["HoTen"] · trễ @r["SoNgayTre"] ngày · chưa trả: @r["TaiSanChuaTra"]</div>
+        }
+    </div>
+}
+
+<div class="card-box">
+    <h3 class="h6 fw-semibold mb-3">@(quanLy ? "Quản lý phiếu mượn" : "Phiếu mượn của tôi")</h3>
+    @if (!phieus.Any())
+    {
+        <div class="text-muted">Chưa có dữ liệu</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped-custom align-middle">
+                <thead><tr><th>Người mượn</th><th>Tài sản</th><th>SL</th><th>Hạn trả</th><th>Mức</th><th>Trạng thái</th><th></th></tr></thead>
+                <tbody>
+                    @foreach (var p in phieus)
+                    {
+                        <tr>
+                            <td>@p.NguoiMuon</td><td>@p.TenTaiSan</td><td>@p.SoLuong</td><td>@p.HanTra.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                @if (p.Gap)
+                                {
+                                    <span class="badge" style="background:#F59E0B">Gấp</span>
+                                }
+                            </td>
+                            <td><span class="badge @Ui.Badge(p.TrangThai)">@p.TrangThai</span></td>
+                            <td class="text-end">
+                                @if (quanLyTS && p.TrangThai == "Chờ duyệt")
+                                {
+                                    <form method="post" asp-action="DuyetPhieu" class="d-inline"><input type="hidden" name="id" value="@p.Id" /><input type="hidden" name="dong" value="true" /><button class="btn btn-sm btn-success">Duyệt</button></form>
+                                    <form method="post" asp-action="DuyetPhieu" class="d-inline"><input type="hidden" name="id" value="@p.Id" /><input type="hidden" name="dong" value="false" /><button class="btn btn-sm btn-danger">Từ chối</button></form>
+                                }
+                                @if (quanLyTS && p.TrangThai == "Đã duyệt")
+                                {
+                                    <form method="post" asp-action="Giao" class="d-inline"><input type="hidden" name="id" value="@p.Id" /><button class="btn btn-sm btn-primary">Giao</button></form>
+                                }
+                                @if (quanLyTS && p.MaChiTiet > 0)
+                                {
+                                    <form method="post" asp-action="Tra" class="d-inline-flex gap-1">
+                                        <input type="hidden" name="id" value="@p.MaChiTiet" />
+                                        <select name="tinhTrang" class="form-select form-select-sm w-auto">
+                                            <option value="Tot">Tốt</option><option value="Cu">Cũ</option><option value="HuNhe">Hỏng nhẹ</option><option value="HuHong">Hỏng</option>
+                                        </select>
+                                        <button class="btn btn-sm btn-primary">Trả</button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+<div class="modal fade" id="mMuon" tabindex="-1">
+    <div class="modal-dialog">
+        <form class="modal-content" method="post" asp-action="Muon">
+            <div class="modal-header"><h5 class="modal-title">Đăng ký mượn: <span id="tenTS"></span></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <input type="hidden" name="id" id="idTS" />
+                <label class="form-label">Số lượng</label><input type="number" name="soLuong" id="slTS" min="1" value="1" class="form-control mb-3" />
+                <label class="form-label">Mượn trong (ngày)</label><input type="number" name="soNgay" min="1" value="3" class="form-control mb-3" />
+                <div class="form-check"><input class="form-check-input" type="checkbox" name="gap" value="true" id="gap" /><label class="form-check-label" for="gap">Cần gấp</label></div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Hủy</button><button class="btn btn-primary">Gửi yêu cầu mượn</button></div>
+        </form>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        document.getElementById('mMuon').addEventListener('show.bs.modal', e => {
+            document.getElementById('idTS').value = e.relatedTarget.dataset.id;
+            document.getElementById('tenTS').textContent = e.relatedTarget.dataset.ten;
+            document.getElementById('slTS').max = e.relatedTarget.dataset.max;
+        });
+    </script>
+}

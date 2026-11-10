@@ -1,0 +1,25 @@
+﻿@model HoatDong
+@{
+    ViewData["Title"] = "Điểm danh";
+}
+<div class="card-box mx-auto text-center" style="max-width:420px">
+    <h2 class="h5">@Model.Ten</h2>
+    @if (ViewBag.Ok != null)
+    {
+        <i class="bi bi-check-circle-fill text-success" style="font-size:80px"></i>
+        <div class="fw-semibold text-success">@ViewBag.Ok</div>
+    }
+    else
+    {
+        @if (ViewBag.Loi != null)
+        {
+            <div class="alert alert-danger">@ViewBag.Loi</div>
+        }
+        <form method="post">
+            <input name="ma" class="form-control code-input mb-3" maxlength="6" inputmode="numeric" placeholder="______" autofocus />
+            <button class="btn btn-primary w-100">Xác nhận điểm danh</button>
+        </form>
+        <div class="small text-muted mt-3">Lỗi hoặc mất mạng? Nhờ người phụ trách điểm danh hộ.</div>
+    }
+    <a class="btn btn-link mt-2" asp-controller="HoatDong" asp-action="ChiTiet" asp-route-id="@Model.Id">&larr; Quay lại</a>
+</div>

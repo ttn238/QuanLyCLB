@@ -1,0 +1,21 @@
+﻿@{
+    ViewData["Title"] = "Đề xuất hoạt động";
+}
+<div class="card-box">
+    <form method="post">
+        <div class="row g-3">
+            <div class="col-md-12"><label class="form-label">Tên hoạt động</label><input name="ten" class="form-control" required /></div>
+            <div class="col-md-6"><label class="form-label">Thời gian bắt đầu</label><input type="datetime-local" name="batDau" class="form-control" required /></div>
+            <div class="col-md-6"><label class="form-label">Địa điểm</label><input name="diaDiem" class="form-control" required /></div>
+            <div class="col-md-6"><label class="form-label">Số lượng tối đa</label><input type="number" name="soLuong" value="30" min="1" class="form-control" /></div>
+            <div class="col-md-6"><label class="form-label">Dự toán (đ)</label><input type="number" name="duToan" value="0" min="0" class="form-control" /></div>
+            <div class="col-12"><label class="form-label">Mô tả</label><textarea name="moTa" rows="4" class="form-control"></textarea></div>
+            <div class="col-12"><div class="alert alert-info py-2 mb-0 small">Hoạt động này sẽ do Chủ nhiệm duyệt.</div></div>
+        </div>
+        <div class="mt-3 d-flex gap-2">
+            <button class="btn btn-primary" name="nhap" value="false">Gửi duyệt</button>
+            <button class="btn btn-outline-primary" name="nhap" value="true" formnovalidate>Lưu nháp</button>
+            <a class="btn btn-link" asp-action="Index">Hủy</a>
+        </div>
+    </form>
+</div>

@@ -1,0 +1,26 @@
+@using System.Data
+@model DataTable
+@{ ViewData["Title"] = "Lịch sử tham gia"; }
+<div class="card-box">
+    @if (Model.Rows.Count == 0) { <div class="text-muted">Bạn chưa điểm danh hoạt động nào</div> }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped-custom align-middle">
+                <thead><tr><th>Hoạt động</th><th>Thời gian</th><th>Điểm danh lúc</th><th>Hình thức</th><th></th></tr></thead>
+                <tbody>
+                    @foreach (DataRow r in Model.Rows)
+                    {
+                        <tr>
+                            <td>@r["TenHoatDong"]</td>
+                            <td>@Convert.ToDateTime(r["ThoiGianBatDau"]).ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>@Convert.ToDateTime(r["ThoiGian"]).ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>@(Convert.ToString(r["HinhThuc"]) == "BoSung" ? "Bổ sung" : "Mã điểm danh")</td>
+                            <td class="text-end"><a class="btn btn-sm btn-outline-primary" asp-action="ChiTiet" asp-route-id="@r["MaHD"]">Xem</a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

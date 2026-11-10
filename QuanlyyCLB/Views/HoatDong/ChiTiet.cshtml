@@ -1,0 +1,102 @@
+﻿@model HoatDong
+@{
+    ViewData["Title"] = "Chi tiết hoạt động";
+    var me = User.FindFirst("MaSV")?.Value;
+    bool daDangKy = Model.DangKy.Contains(me);
+    bool quanLy = !User.IsInRole("ThanhVien");
+}
+@section Actions {
+    <a class="btn btn-outline-primary" asp-action="Index">&larr; Quay lại</a>
+}
+<div class="card-box p-0 overflow-hidden mb-3">
+    <div class="cover big"><i class="bi bi-image"></i></div>
+    <div class="p-4">
+        <div class="d-flex align-items-center gap-2 mb-3">
+            <h2 class="h4 fw-bold mb-0">@Model.Ten</h2>
+            <span class="badge @Ui.Badge(Model.TrangThai)">@Model.TrangThai</span>
+        </div>
+        <div class="row g-3 mb-3 small">
+            <div class="col-md-3"><div class="text-muted">Thời gian</div>@Model.BatDau.ToString("dd/MM/yyyy HH:mm")</div>
+            <div class="col-md-3"><div class="text-muted">Địa điểm</div>@Model.DiaDiem</div>
+            <div class="col-md-3"><div class="text-muted">Số lượng</div>@Model.DangKy.Count/@(Model.SoLuongToiDa == 0 ? "∞" : Model.SoLuongToiDa.ToString())</div>
+            <div class="col-md-3"><div class="text-muted">Dự toán</div>@Ui.Tien(Model.DuToan)</div>
+        </div>
+        <p>@Model.MoTa</p>
+        @if (Model.TrangThai == "Từ chối")
+        {
+            <div class="alert alert-danger">Lý do từ chối: @Model.LyDoTuChoi</div>
+        }
+
+        <div class="d-flex flex-wrap gap-2">
+            @if (Model.TrangThai == "Đã duyệt")
+            {
+                @if (!daDangKy)
+                {
+                    <form method="post" asp-action="DangKy" asp-route-id="@Model.Id"><button class="btn btn-primary">Đăng ký tham gia</button></form>
+                }
+                else
+                {
+                    <form method="post" asp-action="HuyDangKy" asp-route-id="@Model.Id" onsubmit="return confirm('Hủy đăng ký hoạt động này?')"><button class="btn btn-outline-danger">Hủy đăng ký</button></form>
+                }
+            }
+            @if (Model.TrangThai == "Đang diễn ra" && daDangKy)
+            {
+                <a class="btn btn-success" asp-controller="DiemDanh" asp-action="Nhap" asp-route-id="@Model.Id"><i class="bi bi-check2-circle"></i> Điểm danh</a>
+            }
+            @if ((User.IsInRole("ChuNhiem") || User.IsInRole("PhuTrach")) && Model.TrangThai == "Đã duyệt")
+            {
+                <a class="btn btn-outline-primary" asp-controller="DiemDanh" asp-action="Phien" asp-route-id="@Model.Id"><i class="bi bi-qr-code"></i> Mở phiên điểm danh</a>
+            }
+            @if ((User.IsInRole("ChuNhiem") || User.IsInRole("PhuTrach")) && Model.TrangThai == "Đang diễn ra")
+            {
+                <button class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#mTongKet"><i class="bi bi-flag"></i> Tổng kết &amp; kết thúc</button>
+            }
+            @if (Model.MaDuyetCuaToi > 0 && Model.TrangThai == "Chờ duyệt")
+            {
+                <form method="post" asp-action="Duyet" asp-route-id="@Model.Id"><input type="hidden" name="dong" value="true" /><button class="btn btn-success">Duyệt</button></form>
+                <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#mTuChoi">Từ chối</button>
+            }
+        </div>
+    </div>
+</div>
+
+@{ var tk = ViewBag.TongKet as System.Data.DataRow; }
+@if (tk != null)
+{
+    <div class="card-box mb-3">
+        <h3 class="h6 fw-semibold mb-3">Tổng kết hoạt động</h3>
+        <div class="row g-3 small">
+            <div class="col-md-4"><div class="text-muted">Số người tham gia thực tế</div>@tk["SoThamGiaThucTe"]</div>
+            <div class="col-md-4"><div class="text-muted">Chi phí thực tế</div>@Ui.Tien(Convert.ToDecimal(tk["ChiPhiThuc"]))</div>
+            <div class="col-md-4"><div class="text-muted">Ngày lập</div>@Convert.ToDateTime(tk["NgayLap"]).ToString("dd/MM/yyyy HH:mm")</div>
+        </div>
+        @if (!(tk["NhanXet"] is DBNull) && !string.IsNullOrWhiteSpace(Convert.ToString(tk["NhanXet"])))
+        {
+            <p class="mt-3 mb-0">@tk["NhanXet"]</p>
+        }
+    </div>
+}
+
+<div class="modal fade" id="mTongKet" tabindex="-1">
+    <div class="modal-dialog">
+        <form class="modal-content" method="post" asp-action="TongKet" asp-route-id="@Model.Id" onsubmit="return confirm('Kết thúc hoạt động và đóng phiên điểm danh?')">
+            <div class="modal-header"><h5 class="modal-title">Tổng kết hoạt động</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <p class="small text-muted">Hệ thống tự tính số người điểm danh hợp lệ và tổng chi phí đã ghi cho hoạt động này, rồi chuyển hoạt động sang "Kết thúc".</p>
+                <label class="form-label">Nhận xét (không bắt buộc)</label><textarea name="nhanXet" class="form-control" rows="3"></textarea>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Hủy</button><button class="btn btn-dark">Kết thúc hoạt động</button></div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="mTuChoi" tabindex="-1">
+    <div class="modal-dialog">
+        <form class="modal-content" method="post" asp-action="Duyet" asp-route-id="@Model.Id">
+            <input type="hidden" name="dong" value="false" />
+            <div class="modal-header"><h5 class="modal-title">Từ chối hoạt động</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body"><label class="form-label">Lý do (bắt buộc)</label><textarea name="lyDo" class="form-control" rows="3" required></textarea></div>
+            <div class="modal-footer"><button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Hủy</button><button class="btn btn-danger">Từ chối</button></div>
+        </form>
+    </div>
+</div>

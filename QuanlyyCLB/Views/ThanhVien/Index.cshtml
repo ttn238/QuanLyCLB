@@ -1,0 +1,94 @@
+﻿@model List<ThanhVien>
+@{
+    ViewData["Title"] = "Thành viên";
+    string ttChon = (string)ViewBag.Tt;
+}
+@section Actions {
+    @if (User.IsInRole("ChuNhiem"))
+    {
+        <form method="post" asp-action="RaSoat" class="d-inline" onsubmit="return confirm('Đánh dấu các thành viên quá 180 ngày không hoạt động? (chỉ đánh dấu, không xóa)')">
+            <button class="btn btn-outline-primary"><i class="bi bi-search"></i> Rà soát không hoạt động</button>
+        </form>
+    }
+    @if (User.IsInRole("ChuNhiem"))
+    {
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#mThem">Thêm thành viên</button>
+        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#mNhom">Thêm nhóm</button>
+    }
+}
+<div class="card-box">
+    <form class="row g-2 mb-3" method="get">
+        <div class="col-md-5"><input name="q" value="@ViewBag.Q" class="form-control" placeholder="Tìm theo tên hoặc MSSV" /></div>
+        <div class="col-md-3">
+            <select name="tt" class="form-select">
+                <option value="">Mọi trạng thái</option>
+                @foreach (var s in new[] { "Đang hoạt động", "Không hoạt động", "Đã rời" })
+                {
+                    <option value="@s" selected="@(ttChon == s)">@s</option>
+                }
+            </select>
+        </div>
+        <div class="col-auto"><button class="btn btn-primary"><i class="bi bi-funnel"></i> Lọc</button></div>
+    </form>
+    <div class="table-responsive">
+        <table class="table table-striped-custom align-middle">
+            <thead><tr><th>Họ tên</th><th>MSSV</th><th>Nhóm</th><th>Chức vụ</th><th>Ngày tham gia</th><th>Trạng thái</th><th></th></tr></thead>
+            <tbody>
+                @foreach (var t in Model)
+                {
+                    <tr>
+                        <td><span class="avatar sm">@t.HoTen.Split(' ').Last().Substring(0, 1)</span> @t.HoTen</td>
+                        <td>@t.MSSV</td><td>@t.Nhom</td><td>@t.ChucVu</td>
+                        <td>@t.NgayThamGia.ToString("dd/MM/yyyy")</td>
+                        <td>
+                            <span class="badge @Ui.Badge(t.TrangThai)">@t.TrangThai</span>
+                            @if (t.TrangThai == "Đang hoạt động" && t.SoNgayKhongHD > 180)
+                            {
+                                <span class="badge bg-warning text-dark">Quá 180 ngày</span>
+                            }
+                        </td>
+                        <td class="text-end">
+                            @if (User.IsInRole("ChuNhiem") && t.TrangThai != "Đã rời")
+                            {
+                                <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#mRoi" data-id="@t.Id" data-ten="@t.HoTen">Cho rời CLB</button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+<div class="modal fade" id="mThem"><div class="modal-dialog"><form class="modal-content" method="post" asp-action="Them"><div class="modal-header"><h5>Thêm thành viên</h5></div><div class="modal-body">
+    <input name="maSV" class="form-control mb-2" placeholder="Mã sinh viên" required />
+    <select name="maNhom" class="form-select mb-2"><option value="">Không chọn nhóm</option>@foreach (System.Data.DataRow n in ((System.Data.DataTable)ViewBag.Nhom).Rows) { <option value="@n["MaNhom"]">@n["TenNhom"]</option> }</select>
+    <select name="chucVu" class="form-select"><option value="ThanhVien">Thành viên</option><option value="TruongNhom">Trưởng nhóm</option></select>
+    </div><div class="modal-footer"><button class="btn btn-primary">Thêm</button></div></form></div></div>
+<div class="modal fade" id="mNhom"><div class="modal-dialog"><form class="modal-content" method="post" asp-action="ThemNhom"><div class="modal-header"><h5>Thêm nhóm</h5></div><div class="modal-body"><input name="ten" class="form-control" required placeholder="Tên nhóm" /></div><div class="modal-footer"><button class="btn btn-primary">Thêm</button></div></form></div></div>
+    @if (!Model.Any())
+    {
+        <div class="text-center text-muted py-4">Chưa có dữ liệu</div>
+    }
+</div>
+
+<div class="modal fade" id="mRoi" tabindex="-1">
+    <div class="modal-dialog">
+        <form class="modal-content" method="post" asp-action="Roi">
+            <div class="modal-header"><h5 class="modal-title">Cho rời CLB: <span id="tenRoi"></span></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <input type="hidden" name="id" id="idRoi" />
+                <label class="form-label">Lý do</label>
+                <textarea name="lyDo" class="form-control" rows="3" required></textarea>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Hủy</button><button class="btn btn-danger">Xác nhận</button></div>
+        </form>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        document.getElementById('mRoi').addEventListener('show.bs.modal', e => {
+            document.getElementById('idRoi').value = e.relatedTarget.dataset.id;
+            document.getElementById('tenRoi').textContent = e.relatedTarget.dataset.ten;
+        });
+    </script>
+}

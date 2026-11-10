@@ -1,0 +1,13 @@
+# Visual Studio and build output
+.vs/
+**/bin/
+**/obj/
+*.user
+*.suo
+
+# Local Copilot and planning files
+Copilot/
+plans/
+
+# Local environment files
+appsettings.Local.json

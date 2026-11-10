@@ -1,0 +1,150 @@
+@using System.Data
+@{
+    ViewData["Title"] = "Tuyển thành viên";
+    var dot = (DataTable)ViewBag.Dot;
+    var nhom = (DataTable)ViewBag.Nhom;
+    var donToi = (DataTable)ViewBag.DonCuaToi;
+    bool chuNhiem = User.IsInRole("ChuNhiem");
+    bool nopDuoc = User.IsInRole("ThanhVien") && User.MaTV() == null;   // sinh viên chưa là thành viên
+    string Gio(object o) => o is DBNull ? "" : Convert.ToDateTime(o).ToString("dd/MM/yyyy HH:mm");
+}
+@section Actions {
+    @if (chuNhiem) { <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#mDot">Tạo đợt tuyển</button> }
+    @if (nopDuoc && dot.Rows.Count > 0)
+    {
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#mNop"><i class="bi bi-send"></i> Nộp đơn</button>
+    }
+}
+
+<div class="card-box mb-3">
+    <h3 class="h6 fw-semibold mb-3">Đợt tuyển đang mở</h3>
+    @if (dot.Rows.Count == 0) { <div class="text-muted">Hiện chưa có đợt tuyển nào đang mở</div> }
+    @foreach (DataRow r in dot.Rows)
+    {
+        <div class="mb-1"><b>@r["TenDot"]</b> · nhận đơn từ @Convert.ToDateTime(r["NgayBatDau"]).ToString("dd/MM/yyyy") đến @Convert.ToDateTime(r["NgayKetThuc"]).ToString("dd/MM/yyyy")</div>
+    }
+</div>
+@if (chuNhiem) {
+<div class="modal fade" id="mDot"><div class="modal-dialog"><form class="modal-content" method="post" asp-action="TaoDot"><div class="modal-header"><h5>Tạo đợt tuyển</h5></div><div class="modal-body">
+<input name="ten" class="form-control mb-2" placeholder="Tên đợt tuyển" required /><label>Ngày bắt đầu</label><input name="ngayBatDau" type="date" class="form-control mb-2" required /><label>Ngày kết thúc</label><input name="ngayKetThuc" type="date" class="form-control mb-2" required /><input name="chiTieu" type="number" class="form-control" placeholder="Chỉ tiêu (không bắt buộc)" />
+</div><div class="modal-footer"><button class="btn btn-primary">Tạo đợt</button></div></form></div></div>
+}
+
+@if (donToi.Rows.Count > 0)
+{
+    <div class="card-box mb-3">
+        <h3 class="h6 fw-semibold mb-3">Đơn của tôi</h3>
+        <div class="table-responsive">
+            <table class="table table-striped-custom align-middle">
+                <thead><tr><th>Đợt</th><th>Nhóm nguyện vọng</th><th>Ngày nộp</th><th>Trạng thái</th><th>Điểm hồ sơ</th><th>Lịch phỏng vấn</th></tr></thead>
+                <tbody>
+                    @foreach (DataRow r in donToi.Rows)
+                    {
+                        var tt = Ui.Nhan(r["TrangThai"]);
+                        <tr>
+                            <td>@r["TenDot"]</td><td>@r["TenNhom"]</td><td>@Gio(r["NgayNop"])</td>
+                            <td><span class="badge @Ui.Badge(tt)">@tt</span></td><td>@r["DiemHoSo"]</td>
+                            <td>@(Convert.ToString(r["TrangThai"]) == "ChoPhongVan" ? Gio(r["ThoiGian"]) + " · " + r["DiaDiem"] : "")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@if (chuNhiem)
+{
+    var don = (DataTable)ViewBag.Don;
+    var tvs = (List<ThanhVien>)ViewBag.ThanhViens;
+    <div class="card-box">
+        <h3 class="h6 fw-semibold mb-3">Quản lý đơn gia nhập</h3>
+        @if (don.Rows.Count == 0) { <div class="text-muted">Chưa có đơn</div> }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-striped-custom align-middle">
+                    <thead><tr><th>Ứng viên</th><th>Đợt</th><th>Nhóm NV</th><th>Ngày nộp</th><th>Trạng thái</th><th>Điểm HS</th><th>Phỏng vấn</th><th></th></tr></thead>
+                    <tbody>
+                        @foreach (DataRow r in don.Rows)
+                        {
+                            var st = Convert.ToString(r["TrangThai"]);
+                            var pvKq = Convert.ToString(r["KetQua"]);   // rỗng nếu chưa có buổi phỏng vấn
+                            <tr>
+                                <td>@r["HoTen"]<div class="small text-muted">@r["MaSV"]</div></td>
+                                <td>@r["TenDot"]</td><td>@r["TenNhom"]</td><td>@Gio(r["NgayNop"])</td>
+                                <td><span class="badge @Ui.Badge(Ui.Nhan(st))">@Ui.Nhan(st)</span></td>
+                                <td>@r["DiemHoSo"]</td>
+                                 <td>@(r["ThoiGianPV"] is DBNull ? "" : Gio(r["ThoiGianPV"]) + " · " + r["DiaDiemPV"] + " (" + Ui.Nhan(pvKq) + ")")</td>
+                                <td>
+                                    @* Đơn mới nộp: chấm hồ sơ (sp_ChamDon) *@
+                                    @if (st == "DaNop")
+                                    {
+                                        <form method="post" asp-action="Cham" class="d-inline-flex gap-1">
+                                            <input type="hidden" name="id" value="@r["MaDon"]" />
+                                            <input name="diem" class="form-control form-control-sm" style="width:70px" placeholder="Điểm" required />
+                                            <select name="dat" class="form-select form-select-sm w-auto"><option value="true">Đạt</option><option value="false">Không đạt</option></select>
+                                            <button class="btn btn-sm btn-primary">Chấm</button>
+                                        </form>
+                                    }
+                                    @* Đạt hồ sơ: lên lịch phỏng vấn (sp_LenLichPhongVan) *@
+                                    @if (st == "DatHoSo")
+                                    {
+                                        <details>
+                                            <summary class="btn btn-sm btn-outline-primary">Lên lịch phỏng vấn</summary>
+                                            <form method="post" asp-action="LenLich" class="mt-2">
+                                                <input type="hidden" name="id" value="@r["MaDon"]" />
+                                                <input type="datetime-local" name="thoiGian" class="form-control form-control-sm mb-1" required />
+                                                <input name="diaDiem" class="form-control form-control-sm mb-1" placeholder="Địa điểm" required />
+                                                <select name="nguoiPV" class="form-select form-select-sm mb-1" required>
+                                                    @foreach (var t in tvs) { <option value="@t.Id">@t.HoTen (@t.MSSV)</option> }
+                                                </select>
+                                                <button class="btn btn-sm btn-primary">Lưu lịch</button>
+                                            </form>
+                                        </details>
+                                    }
+                                    @* Đã có lịch, chưa có kết quả: chốt kết quả (sp_ChotKetQuaPhongVan) *@
+                                    @if (st == "ChoPhongVan" && r["DiemPV"] is DBNull)
+                                    {
+                                        <details>
+                                            <summary class="btn btn-sm btn-outline-success">Chốt kết quả</summary>
+                                            <form method="post" asp-action="Chot" class="mt-2">
+                                                <input type="hidden" name="id" value="@r["MaDon"]" />
+                                                <input name="diem" class="form-control form-control-sm mb-1" placeholder="Điểm (0-10)" required />
+                                                <input name="nhanXet" class="form-control form-control-sm mb-1" placeholder="Nhận xét" />
+                                                <select name="dat" class="form-select form-select-sm mb-1"><option value="true">Đạt (thêm vào CLB)</option><option value="false">Không đạt</option></select>
+                                                <button class="btn btn-sm btn-success">Chốt</button>
+                                            </form>
+                                        </details>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+}
+
+<div class="modal fade" id="mNop" tabindex="-1">
+    <div class="modal-dialog">
+        <form class="modal-content" method="post" asp-action="Nop">
+            <div class="modal-header"><h5 class="modal-title">Nộp đơn gia nhập</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <label class="form-label">Đợt tuyển</label>
+                <select name="maDot" class="form-select mb-3">
+                    @foreach (DataRow r in dot.Rows) { <option value="@r["MaDot"]">@r["TenDot"]</option> }
+                </select>
+                <label class="form-label">Nhóm nguyện vọng</label>
+                <select name="maNhom" class="form-select mb-3">
+                    <option value="">Chưa chọn</option>
+                    @foreach (DataRow r in nhom.Rows) { <option value="@r["MaNhom"]">@r["TenNhom"]</option> }
+                </select>
+                <label class="form-label">Giới thiệu bản thân</label>
+                <textarea name="gioiThieu" class="form-control" rows="3"></textarea>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Hủy</button><button class="btn btn-primary">Nộp đơn</button></div>
+        </form>
+    </div>
+</div>

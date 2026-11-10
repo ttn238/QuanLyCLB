@@ -1,0 +1,101 @@
+@inject Repo Rp
+@{
+    var c = ViewContext.RouteData.Values["controller"]?.ToString();
+    string Act(string n) => c == n ? "active" : "";
+    var hoTen = User.FindFirst("HoTen")?.Value ?? "";
+    var role = User.IsInRole("ChuNhiem") ? "ChuNhiem" : User.IsInRole("PhuTrach") ? "PhuTrach" : User.IsInRole("GiangVien") ? "GiangVien" : User.IsInRole("QuanTri") ? "QuanTri" : "ThanhVien";
+    var chuCai = string.IsNullOrEmpty(hoTen) ? "?" : hoTen.Trim().Split(' ').Last().Substring(0, 1);
+    bool quanLy = role != "ThanhVien";
+    int chuaDoc = 0;
+    try { chuaDoc = Rp.SoThongBaoChuaDoc(User.MaTK()); } catch { }
+}
+        @if (User.IsInRole("QuanTri"))
+        {
+            <a class="@Act("QuanTri")" asp-controller="QuanTri" asp-action="Index"><i class="bi bi-person-gear"></i> Quản trị tài khoản</a>
+        }
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"] - CLB Sinh viên</title>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="~/css/site.css" rel="stylesheet" />
+</head>
+<body>
+    <header class="topbar">
+        <button class="btn btn-link d-md-none text-dark fs-4 p-0 me-2" id="btnMenu"><i class="bi bi-list"></i></button>
+        <a class="brand" asp-controller="Dashboard" asp-action="Index"><i class="bi bi-people-fill"></i> CLB Sinh viên</a>
+        <div class="ms-auto d-flex align-items-center gap-3">
+            <a asp-controller="ThongBao" asp-action="Index" class="position-relative text-secondary fs-5"><i class="bi bi-bell"></i>
+                @if (chuaDoc > 0) { <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger rounded-circle"></span> }</a>
+            <div class="dropdown">
+                <a class="d-flex align-items-center gap-2 text-decoration-none text-dark" data-bs-toggle="dropdown" href="#">
+                    <span class="avatar">@chuCai</span>
+                    <span class="d-none d-md-inline">@hoTen</span> <i class="bi bi-chevron-down small"></i>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><span class="dropdown-item-text small text-muted">@Ui.TenVaiTro(role)</span></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" asp-controller="Account" asp-action="Logout"><i class="bi bi-box-arrow-right"></i> Đăng xuất</a></li>
+                </ul>
+            </div>
+        </div>
+    </header>
+
+    <nav class="sidebar" id="sidebar">
+        <a class="@Act("Dashboard")" asp-controller="Dashboard" asp-action="Index"><i class="bi bi-speedometer2"></i> Dashboard</a>
+        @if (User.IsInRole("ChuNhiem") || User.IsInRole("PhuTrach"))
+        {
+            <a class="@Act("ThanhVien")" asp-controller="ThanhVien" asp-action="Index"><i class="bi bi-people"></i> Thành viên</a>
+        }
+        <a class="@(ViewContext.RouteData.Values["action"]?.ToString() == "LichSu" ? "" : Act("HoatDong"))" asp-controller="HoatDong" asp-action="Index"><i class="bi bi-calendar-event"></i> Hoạt động</a>
+        @if (User.FindFirst("MaTV") != null)
+        {
+            <a asp-controller="HoatDong" asp-action="LichSu" class="@(ViewContext.RouteData.Values["action"]?.ToString() == "LichSu" ? "active" : "")"><i class="bi bi-clock-history"></i> Lịch sử tham gia</a>
+        }
+        <a class="@Act("ThuChi")" asp-controller="ThuChi" asp-action="Index"><i class="bi bi-cash-coin"></i> Thu chi</a>
+        <a class="@Act("TaiSan")" asp-controller="TaiSan" asp-action="Index"><i class="bi bi-box-seam"></i> Tài sản</a>
+        <a class="@Act("Tuyen")" asp-controller="Tuyen" asp-action="Index"><i class="bi bi-person-plus"></i> Tuyển thành viên</a>
+        @if (quanLy)
+        {
+            <a class="@Act("NganSach")" asp-controller="NganSach" asp-action="Index"><i class="bi bi-wallet2"></i> Ngân sách</a>
+            <a class="@Act("BaoCao")" asp-controller="BaoCao" asp-action="Index"><i class="bi bi-file-earmark-bar-graph"></i> Báo cáo</a>
+        }
+        <a class="@Act("ThongBao")" asp-controller="ThongBao" asp-action="Index"><i class="bi bi-bell"></i> Thông báo</a>
+    </nav>
+
+    <main class="content">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+            <div>
+                <h1 class="page-title">@ViewData["Title"]</h1>
+                <div class="text-muted small">Trang chủ &rsaquo; @ViewData["Title"]</div>
+            </div>
+            <div>@RenderSection("Actions", required: false)</div>
+        </div>
+        @RenderBody()
+    </main>
+
+    @if (TempData["ok"] != null || TempData["err"] != null)
+    {
+        <div class="toast-container position-fixed end-0 p-3" style="top:64px;z-index:2000">
+            <div id="appToast" class="toast align-items-center border-0 @(TempData["ok"] != null ? "text-bg-success" : "text-bg-danger")">
+                <div class="d-flex">
+                    <div class="toast-body">@(TempData["ok"] ?? TempData["err"])</div>
+                    <button class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('btnMenu')?.addEventListener('click', () => document.getElementById('sidebar').classList.toggle('open'));
+        const t = document.getElementById('appToast');
+        if (t) new bootstrap.Toast(t, { delay: 4000 }).show();
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

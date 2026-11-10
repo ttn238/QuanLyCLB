@@ -1,0 +1,121 @@
+@using System.Data
+@model DataTable
+@{
+    ViewData["Title"] = "Ngân sách";
+    var khoan = (DataTable)ViewBag.Khoan;
+    var hd = (DataTable)ViewBag.HoatDong;
+    bool chuNhiem = User.IsInRole("ChuNhiem");
+    bool coThe = chuNhiem || User.IsInRole("PhuTrach");     // được gửi đề nghị xin ngân sách
+}
+
+<div class="card-box mb-3">
+    <h3 class="h6 fw-semibold mb-3">Tổng ngân sách CLB</h3>
+    @if (Model.Rows.Count == 0) { <div class="text-muted">Chưa có dữ liệu</div> }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped-custom align-middle">
+                <thead><tr><th>Hoạt động</th><th class="text-end">Số tiền đề nghị</th><th class="text-end">Được cấp</th><th>Trạng thái</th><th></th></tr></thead>
+                <tbody>
+                    @foreach (DataRow r in Model.Rows)
+                    {
+                        var st = Convert.ToString(r["TrangThai"]);
+                        <tr>
+                            <td>@r["TenHoatDong"]</td>
+                            <td class="text-end">@Ui.Tien(Convert.ToDecimal(r["SoTienDeNghi"]))</td>
+                            <td class="text-end">@(r["SoTienDuocCap"] is DBNull ? "" : Ui.Tien(Convert.ToDecimal(r["SoTienDuocCap"])))</td>
+                            <td class="text-end">@Ui.Tien(Convert.ToDecimal(r["TongHanMuc"]))</td>
+                            <td><span class="badge @Ui.Badge(Ui.Nhan(st))">@Ui.Nhan(st)</span></td>
+                            <td class="text-end">
+                                @* Chỉ Chủ nhiệm duyệt tổng ngân sách (sp_DuyetNganSach) *@
+                                @if (chuNhiem && (st == "Nhap" || st == "ChoDuyet"))
+                                {
+                                    <form method="post" asp-action="Duyet" class="d-inline"><input type="hidden" name="id" value="@r["MaNganSach"]" /><input type="hidden" name="dong" value="true" /><button class="btn btn-sm btn-success">Duyệt</button></form>
+                                    <form method="post" asp-action="Duyet" class="d-inline"><input type="hidden" name="id" value="@r["MaNganSach"]" /><input type="hidden" name="dong" value="false" /><button class="btn btn-sm btn-danger">Từ chối</button></form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+<div class="card-box mb-3">
+    <h3 class="h6 fw-semibold mb-3">Các khoản ngân sách</h3>
+    @if (khoan.Rows.Count == 0) { <div class="text-muted">Chưa có dữ liệu</div> }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped-custom align-middle">
+                <thead><tr><th>Khoản</th><th class="text-end">Hạn mức</th><th class="text-end">Đã chi</th><th class="text-end">Còn lại</th></tr></thead>
+                <tbody>
+                    @foreach (DataRow r in khoan.Rows)
+                    {
+                        <tr>
+                            <td>@r["TenKhoan"]</td>
+                            <td class="text-end">@(r["HanMuc"] is DBNull ? "" : Ui.Tien(Convert.ToDecimal(r["HanMuc"])))</td>
+                            <td class="text-end">@Ui.Tien(Convert.ToDecimal(r["DaChi"]))</td>
+                            <td class="text-end">@Ui.Tien(Convert.ToDecimal(r["ConLai"]))</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+<div class="card-box">
+    <h3 class="h6 fw-semibold mb-1">Xin ngân sách nhà trường</h3>
+    <div class="small text-muted mb-3">Hoạt động có kinh phí sau khi giảng viên duyệt thì lập đề nghị gửi nhà trường.</div>
+    @if (hd.Rows.Count == 0) { <div class="text-muted">Chưa có hoạt động nào cần xin ngân sách</div> }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped-custom align-middle">
+                <thead><tr><th>Hoạt động</th><th class="text-end">Số tiền đề nghị</th><th>Kết quả</th><th class="text-end">Được cấp</th></tr></thead>
+                <tbody>
+                    @foreach (DataRow r in hd.Rows)
+                    {
+                        bool daGui = !(r["MaDeNghi"] is DBNull);
+                        <tr>
+                            <td>@r["TenHoatDong"]</td>
+                            @if (daGui)
+                            {
+                                <td class="text-end">@Ui.Tien(Convert.ToDecimal(r["SoTienDeNghi"]))</td>
+                                <td>
+                                    <span class="badge @Ui.Badge(Ui.Nhan(r["KetQua"]))">@Ui.Nhan(r["KetQua"])</span>
+                                    @if (coThe && Convert.ToString(r["KetQua"]) == "ChoKetQua")
+                                    {
+                                        <form method="post" asp-action="KetQua" class="d-inline-flex gap-1 ms-2 align-middle">
+                                            <input type="hidden" name="id" value="@r["MaDeNghi"]" />
+                                            <input type="number" name="soTien" min="0" class="form-control form-control-sm" style="width:150px" placeholder="Số tiền được cấp" />
+                                            <button name="duocCap" value="true" class="btn btn-sm btn-success">Được cấp</button>
+                                            <button name="duocCap" value="false" formnovalidate class="btn btn-sm btn-outline-danger">Từ chối</button>
+                                        </form>
+                                    }
+                                </td>
+                                <td class="text-end">@(r["SoTienDuocCap"] is DBNull ? "" : Ui.Tien(Convert.ToDecimal(r["SoTienDuocCap"])))</td>
+                            }
+                            else
+                            {
+                                <td colspan="3" class="text-end">
+                                    @if (coThe)
+                                    {
+                                        <form method="post" asp-action="Xin" class="d-inline-flex gap-1">
+                                            <input type="hidden" name="id" value="@r["MaHD"]" />
+                                            <input type="number" name="soTien" min="1" class="form-control form-control-sm" style="width:170px" placeholder="Số tiền đề nghị" required />
+                                            <button class="btn btn-sm btn-primary">Gửi xin</button>
+                                        </form>
+                                    }
+                                    else { <span class="text-muted">Chưa gửi</span> }
+                                </td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

@@ -1,0 +1,59 @@
+﻿@model HoatDong
+@{
+    ViewData["Title"] = "Phiên điểm danh";
+}
+@section Actions {
+    <a class="btn btn-outline-primary" asp-controller="HoatDong" asp-action="ChiTiet" asp-route-id="@Model.Id">&larr; Quay lại</a>
+}
+<div class="card-box text-center mb-3">
+    <h2 class="h5">@Model.Ten</h2>
+    <div id="ma" class="code-big">------</div>
+    <div class="fs-5 mb-3">Mã đổi sau <span id="dem" class="fw-bold">00:00</span></div>
+    <div class="mb-3 fs-5"><span id="da">0</span>/<span id="tong">0</span> đã điểm danh</div>
+    <div class="d-flex justify-content-center gap-2">
+        <form method="post" asp-action="Mo" asp-route-id="@Model.Id"><button class="btn btn-primary">Mở phiên</button></form>
+        <form method="post" asp-action="Dong" asp-route-id="@Model.Id"><button class="btn btn-danger">Đóng phiên</button></form>
+        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#mBS">Điểm danh bổ sung</button>
+    </div>
+</div>
+<div class="card-box">
+    <h3 class="h6 fw-semibold">Đã điểm danh</h3>
+    <ul id="ds" class="mb-0"></ul>
+</div>
+
+<div class="modal fade" id="mBS" tabindex="-1">
+    <div class="modal-dialog">
+        <form class="modal-content" method="post" asp-action="BoSung" asp-route-id="@Model.Id">
+            <div class="modal-header"><h5 class="modal-title">Điểm danh bổ sung</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <label class="form-label">Thành viên (tên đăng nhập)</label>
+                <select name="tenDangNhap" class="form-select mb-3">
+                    @foreach (var u in (List<ThanhVien>)ViewBag.ThanhViens)
+                    {
+                        <option value="@u.MSSV">@u.HoTen (@u.MSSV)</option>
+                    }
+                </select>
+                <label class="form-label">Lý do</label><input name="lyDo" class="form-control" required />
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Hủy</button><button class="btn btn-primary">Lưu</button></div>
+        </form>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        async function tai() {
+            const r = await fetch('/DiemDanh/MaMoi/@Model.Id');
+            const d = await r.json();
+            document.getElementById('ma').textContent = d.ma;
+            const dem = document.getElementById('dem');
+            const phut = Math.floor(d.conLai / 60);
+            const giay = d.conLai % 60;
+            dem.textContent = String(phut).padStart(2, '0') + ':' + String(giay).padStart(2, '0');
+            dem.style.color = d.conLai < 10 && d.conLai > 0 ? '#DC3545' : '';
+            document.getElementById('da').textContent = d.da;
+            document.getElementById('tong').textContent = d.tong;
+            document.getElementById('ds').innerHTML = d.ds.map(x => '<li>' + x + '</li>').join('');
+        }
+        tai(); setInterval(tai, 1000);
+    </script>
+}

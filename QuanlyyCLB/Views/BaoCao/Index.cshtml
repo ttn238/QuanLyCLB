@@ -1,0 +1,78 @@
+@using System.Data
+@model DataSet
+@{
+    ViewData["Title"] = "Báo cáo cuối kỳ";
+    DateTime tu = (DateTime)ViewBag.Tu, den = (DateTime)ViewBag.Den;
+    int N(DataRow r, string c) => r[c] is DBNull ? 0 : Convert.ToInt32(r[c]);
+    decimal M(DataRow r, string c) => r[c] is DBNull ? 0m : Convert.ToDecimal(r[c]);
+}
+<div class="card-box mb-3">
+    <form class="row g-2" method="get">
+        <div class="col-md-3"><label class="form-label">Từ ngày</label><input type="date" name="tu" value="@tu.ToString("yyyy-MM-dd")" class="form-control" /></div>
+        <div class="col-md-3"><label class="form-label">Đến ngày</label><input type="date" name="den" value="@den.ToString("yyyy-MM-dd")" class="form-control" /></div>
+        <div class="col-auto d-flex align-items-end"><button class="btn btn-primary">Xem báo cáo</button></div>
+    </form>
+</div>
+@if (Model.Tables.Count >= 6)
+{
+    var tv = Model.Tables[0].Rows[0];      @* 1. thành viên *@
+    var tc = Model.Tables[3].Rows[0];      @* 4. tổng thu chi *@
+    var muon = Model.Tables[5].Rows[0];    @* 6. mượn tài sản *@
+    <div class="row g-3 mb-3">
+        <div class="col-6 col-md"><div class="stat"><span class="num">@N(tv, "TongThanhVien")</span>Tổng thành viên</div></div>
+        <div class="col-6 col-md"><div class="stat"><span class="num text-success">@N(tv, "DangHoatDong")</span>Đang hoạt động</div></div>
+        <div class="col-6 col-md"><div class="stat"><span class="num text-warning">@N(tv, "KhongHoatDong")</span>Không hoạt động</div></div>
+        <div class="col-6 col-md"><div class="stat"><span class="num text-primary">@N(tv, "MoiGiaNhapTrongKy")</span>Mới gia nhập</div></div>
+        <div class="col-6 col-md"><div class="stat"><span class="num text-danger">@N(tv, "RoiTrongKy")</span>Rời CLB</div></div>
+    </div>
+    <div class="row g-3 mb-3">
+        <div class="col-md-4"><div class="stat"><span class="num text-success">@Ui.Tien(M(tc, "TongThu"))</span>Tổng thu</div></div>
+        <div class="col-md-4"><div class="stat"><span class="num text-danger">@Ui.Tien(M(tc, "TongChi"))</span>Tổng chi</div></div>
+        <div class="col-md-4"><div class="stat"><span class="num text-primary">@Ui.Tien(M(tc, "ChenhLech"))</span>Chênh lệch</div></div>
+    </div>
+
+    <div class="card-box mb-3">
+        <h3 class="h6 fw-semibold mb-3">Hoạt động theo trạng thái</h3>
+        @if (Model.Tables[1].Rows.Count == 0) { <div class="text-muted">Không có hoạt động trong kỳ</div> }
+        @foreach (DataRow r in Model.Tables[1].Rows)
+        {
+            <span class="badge @Ui.Badge(Ui.Nhan(r["TrangThai"])) me-2">@Ui.Nhan(r["TrangThai"]): @r["SoHoatDong"]</span>
+        }
+    </div>
+
+    <div class="card-box mb-3">
+        <h3 class="h6 fw-semibold mb-3">Tham gia từng hoạt động</h3>
+        <div class="table-responsive">
+            <table class="table table-striped-custom align-middle">
+                <thead><tr><th>Hoạt động</th><th>Thời gian</th><th class="text-end">Đăng ký</th><th class="text-end">Điểm danh hợp lệ</th></tr></thead>
+                <tbody>
+                    @foreach (DataRow r in Model.Tables[2].Rows)
+                    {
+                        <tr><td>@r["TenHoatDong"]</td><td>@Convert.ToDateTime(r["ThoiGianBatDau"]).ToString("dd/MM/yyyy HH:mm")</td>
+                            <td class="text-end">@r["SoDangKy"]</td><td class="text-end">@r["SoDiemDanhHopLe"]</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card-box mb-3">
+        <h3 class="h6 fw-semibold mb-3">Chi theo khoản ngân sách</h3>
+        <div class="table-responsive">
+            <table class="table table-striped-custom align-middle">
+                <thead><tr><th>Khoản</th><th class="text-end">Hạn mức</th><th class="text-end">Đã chi trong kỳ</th></tr></thead>
+                <tbody>
+                    @foreach (DataRow r in Model.Tables[4].Rows)
+                    {
+                        <tr><td>@r["TenKhoan"]</td><td class="text-end">@Ui.Tien(M(r, "HanMuc"))</td><td class="text-end">@Ui.Tien(M(r, "DaChi"))</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card-box">
+        <h3 class="h6 fw-semibold mb-2">Mượn tài sản</h3>
+        <div>@N(muon, "SoPhieu") phiếu mượn trong kỳ, trong đó @N(muon, "SoPhieuTraTre") phiếu trả trễ.</div>
+    </div>
+}
