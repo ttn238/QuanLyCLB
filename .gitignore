@@ -11,3 +11,4 @@ plans/
 
 # Local environment files
 appsettings.Local.json
+app.log*

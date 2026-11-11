@@ -119,9 +119,10 @@ JOIN SinhVien sv ON sv.MaSV = tv.MaSV";
             JOIN ThanhVien tv ON tv.MaThanhVien=d.MaThanhVien JOIN SinhVien sv ON sv.MaSV=tv.MaSV
             WHERE d.TrangThai='DaDangKy' AND d.MaHD IN ({ids})").Rows)
             byId[I(r, "MaHD")].DangKy.Add(S(r, "MaSV"));
-        foreach (DataRow r in _db.Table($@"SELECT dd.MaHD, sv.MaSV FROM DiemDanh dd
+        foreach (DataRow r in _db.Table($@"SELECT DISTINCT p.MaHD, sv.MaSV FROM DiemDanh dd
+            JOIN PhienDiemDanh p ON p.MaPhien=dd.MaPhien
             JOIN ThanhVien tv ON tv.MaThanhVien=dd.MaThanhVien JOIN SinhVien sv ON sv.MaSV=tv.MaSV
-            WHERE dd.TrangThai='HopLe' AND dd.MaHD IN ({ids})").Rows)
+            WHERE dd.TrangThai='HopLe' AND p.MaHD IN ({ids})").Rows)
             byId[I(r, "MaHD")].DiemDanh.Add(S(r, "MaSV"));
     }
 
